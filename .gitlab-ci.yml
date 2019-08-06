@@ -1,0 +1,8 @@
+image: bash
+
+stages:
+  - test      
+run tests:
+  stage: test      
+  script: 
+    - scripts/intertest.sh scripts/math.sh
