@@ -1,0 +1,59 @@
+ - name: Add Docker GPG key
+   apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+   become: true
+ - name: Add Docker APT repository
+   apt_repository:
+     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
+   become: true
+ - name: Install list of packages
+   apt:
+     name:
+       - apt-transport-https
+       - ca-certificates
+       - curl
+       - software-properties-common
+       - docker-ce
+     state: present
+     update_cache: yes
+   become: true
+ - name: Add runner repository
+   get_url: 
+     url: https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh
+     dest: /usr/local/sbin/script.deb.sh
+     mode: '0777'
+   become: true
+ - name: Start_script
+   command: /usr/local/sbin/script.deb.sh
+   args:
+     creates: /etc/apt/sources.list.d/runner_gitlab-runner.list
+   become: true
+ - name: Install gitlab_runner
+   apt: 
+     name: gitlab-runner
+     state: present
+   become: true
+ - name: Find runner
+   command: gitlab-runner list
+   changed_when: false
+   register: list_runner
+   become: true
+ - debug: 
+     var: list_runner
+     verbosity: 2
+ - debug: 
+     var: gitlab_runner_token  
+ - name: Registry runner
+   command: > 
+     gitlab-runner register 
+     --non-interactive 
+     --url "{{gitlab_runner_url}}" 
+     --registration-token "{{gitlab_runner_token}}" 
+     --executor "docker"
+     --docker-image alpine:latest 
+     --description "docker-runner" 
+     --tag-list "docker,aws" 
+     --run-untagged="true" 
+     --locked="false" 
+     --access-level="not_protected"
+     #when: list_runner.stderr.find('docker-runner') == -1
+   become: true

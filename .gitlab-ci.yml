@@ -5,4 +5,4 @@ stages:
 run tests:
   stage: test      
   script: 
-    - scripts/intertest.sh scripts/math.sh
+    - intertest.sh math.sh
